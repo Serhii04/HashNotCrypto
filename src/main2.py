@@ -132,7 +132,7 @@ def attack1(K: int, L: int, n: int, rand_v_hash):
     return preimage
 
 if __name__ == "__main__":
-    for _ in range(2):
+    for _ in range(20):
         K = pow(2, 10)
         L = pow(2, 5)
         n = 16
@@ -152,6 +152,9 @@ if __name__ == "__main__":
             print(f"preimage = {hex(preimage)}")
             print(f"preimage_hash = {hex(preimage_hash)}")
 def test_attack1(N: int):
+    if N < 1:
+        return [None]
+
     n = 16
 
     K_vals = [pow(2, 10), pow(2, 12), pow(2, 14)]
@@ -171,7 +174,7 @@ def test_attack1(N: int):
             results[i][j] = results[i][j] / N
 
     return results
-rez = test_attack1(N = 1)
+rez = test_attack1(N = 0)
 
 for l in rez:
     print(l)
@@ -228,7 +231,7 @@ def attack2(K: int, L: int, n: int, rand_v_hash):
     
     return preimage
 if __name__ == "__main__":
-    for _ in range(2):
+    for _ in range(20):
         K = pow(2, 5)
         L = pow(2, 5)
         n = 16
@@ -248,6 +251,9 @@ if __name__ == "__main__":
             print(f"preimage = {hex(preimage)}")
             print(f"preimage_hash = {hex(preimage_hash)}")
 def test_attack2(N: int):
+    if N < 1:
+        return [None]
+
     n = 16
 
     K_vals = [pow(2, 5), pow(2, 6), pow(2, 7)]
@@ -267,8 +273,74 @@ def test_attack2(N: int):
             results[i][j] = results[i][j] / N
 
     return results
-rez = test_attack2(N = 1)
 
-for l in rez:
+from datetime import datetime
+rez2 = test_attack2(N = 0)
+
+for l in rez2:
     print(l)
         
+# Halman Theorem (Probability)
+from mpmath import mpf, mpc, mp, mpmathify, fadd, fdiv, fsub, fmul
+from math import trunc
+def calc_halman_probability(n, K, L):
+    # m - K, t - L
+    N = pow(2, n)
+
+    sum = 0 
+    for i in range(1, K + 1):
+        for j in range(L):
+            # sum += pow(mpmathify(1) - mpmathify(mpmathify(i * L) / mpmathify(N)), j + 1)
+            p = fsub(1, fdiv(i * L, N))
+            ppp = 1
+            for i in range(j + 1):
+                ppp = fmul(ppp, p)
+
+            sum = fadd(sum, ppp)
+
+    return fdiv(sum, N)
+# def calc_halman_probability(n, K, L):
+#     # m - K, t - L
+#     N = pow(2, n)
+
+#     sum = 0 
+#     for i in range(1, K + 1):
+#         p = fsub(1, fdiv(i * L, N))
+
+#         ppp = 1
+#         for t in range(L + 1):
+#             ppp = fmul(ppp, p)
+
+#         sum = fadd(sum, fdiv(fsub(1, ppp), fsub(1, p)))
+#         sum = fsub(sum, 1)
+
+
+#     return fdiv(sum, N)
+K_vals = [pow(2, 10), pow(2, 12), pow(2, 14)]
+L_vals = [pow(2, 5), pow(2, 6), pow(2, 7)]
+results = [[0 for j in range(3)] for i in range(3)]
+
+for i in range(3):
+    for j in range(3):
+        p = calc_halman_probability(n=16, K=K_vals[i], L=L_vals[j])
+        # print(p)
+        print(f"{int(p* 100)}\% & ", end="")
+    
+    print("")
+K_vals = [pow(2, 5), pow(2, 6), pow(2, 7)]
+L_vals = [pow(2, 5), pow(2, 6), pow(2, 7)]
+results = [[0 for j in range(3)] for i in range(3)]
+
+for i in range(3):
+    for j in range(3):
+        p = calc_halman_probability(n=16, K=K_vals[i], L=L_vals[j])
+        results[i][j] = 1 - pow(1 - p, K_vals[i])
+
+
+
+print("K tables probabilities")
+for l in results:
+    for i in l:
+        print(f"{int(i * 100)}\% & ", end="")
+    
+    print("")
